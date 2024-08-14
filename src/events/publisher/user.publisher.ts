@@ -24,7 +24,16 @@ export default{
             const queue = 'activation-code'
             publisher(queue,data)
         } catch (error) {
-            
+            console.log(error)
+        }
+    },
+
+    ResetCode: async(data:any)=>{
+        try {
+            const queue = 'reset-code'
+            publisher(queue,data);
+        } catch (error) {
+            console.log(error)
         }
     }
 }

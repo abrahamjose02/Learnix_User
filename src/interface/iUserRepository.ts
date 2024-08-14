@@ -14,4 +14,6 @@ export interface IUserRepository{
     getUsers():any;
     getInstructors():any;
     deleteUser(id:string):Promise<Object>
+    updateResetToken(userId:string,resetToken:string,resetCode:string):Promise<IUser | null>
+    clearResetToken(userId:string):Promise<IUser | null>
 }

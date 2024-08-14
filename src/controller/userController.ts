@@ -58,15 +58,34 @@ export class UserController{
             console.log(e)
         }
     }
-    loginUser  = async(email:string,password:string)=>{
+    loginUser = async (email: string, password: string) => {
         try {
-            const response = await this.service.userLogin(email,password)
-            return response
+            const response = await this.service.userLogin(email, password);
+    
+            if (!response.success) {
+                return {
+                    msg: response.message,
+                    status: 400, 
+                };
             }
-             catch (e:any) {
-            console.log(e)
+    
+            return {
+                msg: 'Login successful',
+                data: {
+                    accessToken: response.accessToken,
+                    refreshToken: response.refreshToken,
+                    user: response.user,
+                },
+                status: 200,
+            };
+        } catch (e: any) {
+            console.log(e);
+            return {
+                msg: 'Internal server error',
+                status: 500,
+            };
         }
-    }
+    };
     getUser = async(id:string)=>{
         try {
             const response = await this.service.getUser(id)
@@ -94,6 +113,7 @@ export class UserController{
             console.log(e)
         }
     }
+
     updateUserInfo  = async(data:{userId:string;name:string})=>{
         try {
             const response = await this.service.updateUserInfo(data.userId,data.name)
@@ -104,6 +124,7 @@ export class UserController{
             console.log(e)
         }
     }
+
     updatePassword = async(data:{userId:string;oldPassword:string;newPassword:string})=>{
         try {
             const response = await this.service.updatePassword(data.oldPassword,data.newPassword,data.userId)
@@ -151,6 +172,64 @@ export class UserController{
                 id
             )
             return response            
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+
+    forgotPassword = async(data:{email:string})=>{
+        try {
+            const response = await this.service.forgotPassword(data.email);
+            const resetData = {
+                name:response.name,
+                email:data.email,
+                resetCode:response.resetCode,
+                resetToken:response.resetToken
+            }
+            
+            publisher.ResetCode(resetData);
+
+            return{
+                msg:"Reset code send to the Email",
+                data:response,
+                status:201
+            }
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+
+    verifyResetCode =async(data:{token:string,resetCode:string}) =>{
+        try {
+            const response = await this.service.verifyResetCode(data)
+            if (!response.success) {
+                return {
+                    msg: response.message,
+                    status: 400,
+                };
+            }
+            return {
+                msg: 'Reset code verified successfully.',
+                status: 200,
+            };
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+
+    resetPassword = async(data:{userId:string;newPassword:string}) =>{
+        try {
+            const response = await this.service.resetPassword(data.userId, data.newPassword);
+            if (!response.success) {
+                return {
+                    msg: response.message,
+                    status: 400, 
+                };
+            }
+            return {
+                msg: 'Password reset successfully.',
+                status: 200,
+            };
         } catch (e:any) {
             console.log(e)
         }

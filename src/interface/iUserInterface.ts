@@ -20,4 +20,10 @@ export interface IUserService{
     getUsers():any;
     getInstructors():any;
     deleteUser(userId:string):any;
+    forgotPassword(email:string):any;
+    verifyResetCode(data:{
+        token:string;
+        resetCode:string
+    }):any;
+    resetPassword(userId:string,newPassword:string):any
 }

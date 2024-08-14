@@ -11,6 +11,7 @@ import sharp from "sharp";
 import { S3Params } from "./types/interface";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import {s3} from './utils/s3'
+import { createResetToken } from "./utils/ResetToken";
 
 export class UserService implements IUserService{
     private repository:IUserRepository
@@ -18,6 +19,7 @@ export class UserService implements IUserService{
     constructor(repository:IUserRepository){
         this.repository = repository;
     }
+    
 
     async userRegister(userData: User) {
         try {
@@ -45,23 +47,31 @@ export class UserService implements IUserService{
         }
       }
 
-    async userLogin(email: string, password: string) {
+      async userLogin(email: string, password: string) {
         try {
-            const user = await this.repository.findOne(email)
-            if(!user){
-                throw new Error('invalid Email')
+            const user = await this.repository.findOne(email);
+            console.log('Retrieved user:', user); // Log the retrieved user
+    
+            if (!user) {
+                return { success: false, message: 'Invalid email' };
             }
-            const isPassword = await user.comparePassword(password)
-            if(!isPassword){
-                throw new Error('Password incorrect')
+    
+            const isPasswordMatch = await user.comparePassword(password);
+            console.log('Is password match:', isPasswordMatch); // Log the password comparison result
+    
+            if (!isPasswordMatch) {
+                return { success: false, message: 'Incorrect password' };
             }
-            const accessToken = user.SignAccessToken()
-            const refreshToken = user.SignRefreshToken()
-            return {accessToken,refreshToken,user}
+    
+            const accessToken = user.SignAccessToken();
+            const refreshToken = user.SignRefreshToken();
+            return { success: true, accessToken, refreshToken, user };
         } catch (err) {
-            return null;
+            console.error('Login error:', err); // Log the error
+            return { success: false, message: 'Failed to login' };
         }
     }
+
 
     async activateUser(data: { token: string; activationCode: string; }) {
         try {
@@ -153,5 +163,72 @@ export class UserService implements IUserService{
        const url = `https://user-avatar-info.s3.ap-south-1.amazonaws.com/${imageName}`;
        await this.repository.avatarUpdate(id,url)
        return {success:true};
+    }
+
+    async forgotPassword(email: string) {
+        try {
+            const user = await this.repository.findOne(email)
+            if(!user){
+                throw new Error("user not found")
+            }
+
+            const resetTokenData = createResetToken(user);
+
+            await this.repository.updateResetToken(user.id,resetTokenData.token,resetTokenData.resetCode);
+
+            return {
+                success:true,
+                name:user.name,
+                message:"Reset code generated",
+                resetCode:resetTokenData.resetCode,
+                resetToken:resetTokenData.token
+            }
+        } catch (error) {
+            console.log( error)
+        }
+    }
+
+    async verifyResetCode(data: { token: string; resetCode: string }) {
+        try {
+            const { token, resetCode } = data;
+            const decode = jwt.verify(token, process.env.JWT_SECRET as Secret) as {
+                user: User;
+                resetCode: string;
+            };
+    
+            if (decode.resetCode !== resetCode) {
+                throw new Error("Invalid reset code");
+            }
+    
+            const user = await this.repository.findOne(decode.user.email);
+            if (!user) {
+                throw new Error("User not found");
+            }
+    
+            if (user.resetToken !== token || new Date() > user.resetTokenExpires) {
+                throw new Error("Invalid or expired reset token");
+            }
+    
+            return { success: true, userId: user._id, message: "Reset token and code verified successfully" };
+        } catch (e: any) {
+            console.log(e);
+            return { success: false, message: "Failed to verify reset code" };
+        }
+    }
+    async resetPassword(userId: string, newPassword: string) {
+        try {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const user = await this.repository.updatePassword(userId, hashedPassword);
+        
+        if (!user) {
+            return { success: false, message: "User not found" };
+        }
+
+        await this.repository.clearResetToken(userId);
+        return { success: true, message: "Password reset successfully" };
+        } catch (e) {
+            console.log(e)
+            return { success: false, message: "Failed to reset password" };
+        }
     }
 }

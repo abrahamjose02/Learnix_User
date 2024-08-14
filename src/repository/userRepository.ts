@@ -81,4 +81,28 @@ export class UserRepository implements IUserRepository{
             throw new Error("db error");
         }
     }
+    async updateResetToken(userId: string, resetToken: string, resetCode: string): Promise<IUser | null> {
+        try {
+            const expirationTime = new Date();
+            expirationTime.setMinutes(expirationTime.getMinutes()+5);
+
+            return await UserModel.findByIdAndUpdate(userId,{
+                resetToken,
+                resetCode,
+                resetTokenExpires:expirationTime
+            },{new:true});
+        } catch (e:any) {
+            throw new Error('db error')
+        }
+    }
+
+    async clearResetToken(userId: string): Promise<IUser | null> {
+        try {
+            return await UserModel.findByIdAndUpdate(userId,{$unset:{resetToken:1,resetCode:1,resetTokenExpires:1}},{new:true})            
+        } catch (e:any) {
+            throw new Error("db error")
+        }
+    }
+
+    
 }

@@ -58,6 +58,18 @@ export default class MessageHandler{
                     response = await userController.updateAvatar.bind(userController)(data.fieldName,data.id,data.mimeType,data.data)
                     break;
 
+                case "forgot-password":
+                    response = await userController.forgotPassword.bind(userController)(data);
+                    break;
+
+                case "verify-reset-code":
+                    response = await userController.verifyResetCode.bind(userController)(data);
+                    break;
+                
+                case "reset-password":
+                    response = await userController.resetPassword.bind(userController)(data);
+                    break;
+
                 default:
                     response = 'Request-key not found';
                     break;
