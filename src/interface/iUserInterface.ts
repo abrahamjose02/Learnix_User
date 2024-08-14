@@ -11,4 +11,13 @@ export interface IUserService{
     userLogin(email:string,password:string):any;
     updateUserInfo(id:string,name:string):any;
     updatePassword(oldPassword:string,newPassword:string,userId:string):any;
+    updateAvatar(
+        data:Buffer,
+        fieldName:string,
+        mimeType:string,
+        id:string
+    ):any
+    getUsers():any;
+    getInstructors():any;
+    deleteUser(userId:string):any;
 }

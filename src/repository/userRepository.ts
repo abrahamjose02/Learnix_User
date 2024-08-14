@@ -5,6 +5,7 @@ import { User } from "../model/user.entities";
 
 
 export class UserRepository implements IUserRepository{
+   
 
     register(userData: User): Promise<IUser | null> {
         try {
@@ -29,6 +30,8 @@ export class UserRepository implements IUserRepository{
             throw new Error('db error')
         }
     }
+
+    
     async findbyIdAndUpdate(id: string, name: string): Promise<IUser | null> {
         try {
             const user = await UserModel.findByIdAndUpdate(id,{name:name})
@@ -45,5 +48,37 @@ export class UserRepository implements IUserRepository{
             throw new Error('db error')
         }
     }
-    
+    async deleteUser(userId: string): Promise<Object> {
+        try {
+            await UserModel.findByIdAndDelete(userId);
+            return {success:true}
+        } catch (e:any) {
+            return {success:false,message:"Database error"}
+        }
+    }
+
+    async getUsers() {
+        try {
+            const user = await UserModel.find({role:"user"});
+            return user
+        } catch (error) {
+            throw new Error("db error");
+        }
+    }
+
+    async getInstructors() {
+        try {
+            const instructors = UserModel.find({role:"instructor"});
+            return instructors;
+        } catch (error:any) {
+            throw new Error("db error");
+        }
+    }
+    async avatarUpdate(id: string, avatar: string): Promise<IUser | null> {
+        try {
+            return await UserModel.findByIdAndUpdate(id,{avatar});
+        } catch (e:any) {
+            throw new Error("db error");
+        }
+    }
 }

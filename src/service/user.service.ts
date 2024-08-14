@@ -6,8 +6,11 @@ import jwt,{Secret } from "jsonwebtoken";
 import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { createActivationToken } from "./utils/activationToken";
-
-
+import crypto from 'crypto'
+import sharp from "sharp";
+import { S3Params } from "./types/interface";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import {s3} from './utils/s3'
 
 export class UserService implements IUserService{
     private repository:IUserRepository
@@ -80,6 +83,7 @@ export class UserService implements IUserService{
         }
     }
 
+ 
     async getUser(id: string): Promise<User | any> {
         try {
             const user = await this.repository.findbyId(id)
@@ -114,5 +118,40 @@ export class UserService implements IUserService{
             return null
         }
     }
+
+    async getUsers() {
+        return await this.repository.getUsers()
+    }
+
+  async  getInstructors() {
+        return await this.repository.getInstructors()
+    }
     
+   async deleteUser(userId: string) {
+        return await this.repository.deleteUser(userId)
+    }
+
+    async updateAvatar(data: Buffer, fieldName: string, mimeType: string, id: string) {
+        const randomImageName = (bytes = 32) =>
+            crypto.randomBytes(bytes).toString("hex");
+        const bucketName = process.env.S3_BUCKET_NAME || "";
+        const buffer = await sharp(data)
+            .resize({height:600,width:600,fit:"cover"})
+            .toBuffer();
+
+        const imageName = `learnix-profile/${randomImageName}`;
+        const params:S3Params = {
+            Bucket:bucketName,
+            Key:imageName,
+            Body:buffer,
+            ContentType:mimeType
+        };
+
+       const command = new PutObjectCommand(params);
+
+       const rslt = await s3.send(command);
+       const url = `https://user-avatar-info.s3.ap-south-1.amazonaws.com/${imageName}`;
+       await this.repository.avatarUpdate(id,url)
+       return {success:true};
+    }
 }

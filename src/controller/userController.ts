@@ -114,5 +114,45 @@ export class UserController{
             console.log(e)
         }
     }
-}
     
+    getUsers = async(data: any)=>{
+        try {
+            const response = await this.service.getUsers()
+            return response
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+
+    getInstructor = async(data: any)=>{
+        try {
+            const response = await this.service.getInstructors()
+            return response
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+
+    deleteUser = async(userId:string)=>{
+        try {
+            const response = await this.service.deleteUser(userId);
+            return response
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+
+    updateAvatar = async(data: Buffer, fieldName: string, mimeType: string, id: string)=>{
+        try {
+            const response = await this.service.updateAvatar(
+                data,
+                fieldName,
+                mimeType,
+                id
+            )
+            return response            
+        } catch (e:any) {
+            console.log(e)
+        }
+    }
+}

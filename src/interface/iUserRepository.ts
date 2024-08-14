@@ -9,9 +9,9 @@ export interface IUserRepository{
     findOne(email:string) :Promise<IUser | null>;
     findbyId(id:string) : Promise <IUser | null>;
     findbyIdAndUpdate(id:string,name:string) : Promise <IUser | null>
-    // avatarUpdate(id:string,avatar:string) : Promise <IUser | null>
+    avatarUpdate(id:string,avatar:string) : Promise <IUser | null>
     updatePassword(id:string , password:string) : Promise <IUser | null>
-    // getUser():any;
-    // getInstructor():any;
-    // updateCourseList(userId:string,courseId:string) : Promise <IUser | null>
+    getUsers():any;
+    getInstructors():any;
+    deleteUser(id:string):Promise<Object>
 }

@@ -22,6 +22,9 @@ export interface IUser extends Document{
     comparePassword:(password:string) => Promise<boolean>
     SignAccessToken:()=>string;
     SignRefreshToken:()=> string;
+    resetPasswordToken:string;
+    resetPasswordExpires:Date;
+    generatePasswordResetToken:()=>string;
 }
 
 const userSchema : Schema<IUser> = new mongoose.Schema(
@@ -62,6 +65,12 @@ const userSchema : Schema<IUser> = new mongoose.Schema(
                 courseId:String
             },
         ],
+        resetPasswordToken:{
+            type:String
+        },
+        resetPasswordExpires:{
+            type:Date,
+        },
     },
     {
         timestamps:true
@@ -105,6 +114,21 @@ userSchema.methods.SignRefreshToken = function(){
 
 userSchema.methods.comparePassword = async function(enteredPassword:string){
     return await bcrypt.compare(enteredPassword,this.password)
+}
+
+userSchema.methods.generatePasswordResetToken = function(){
+    const resetToken = jwt.sign(
+        {id:this._id},
+        process.env.RESET_PASSWORD_TOKEN || "",
+        {
+            expiresIn:"15m"
+        }
+    );
+
+    this.resetPasswordToken = bcrypt.hashSync(resetToken,10);
+    this.resetPasswordExpires = new Date(Date.now()+ 15*60*1000); //15minutes
+
+    return resetToken;
 }
 
 
