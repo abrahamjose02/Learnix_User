@@ -234,4 +234,31 @@ export class UserController{
             console.log(e)
         }
     }
+
+    async updateUserRole(data:{userId:string,newRole:string}){
+        try {
+
+            const validRoles = Object.values(UserRole) as string[];
+            if(!validRoles.includes(data.newRole)){
+                return {msg:'Invalid role provided',status:400};
+            }
+
+            const role = data.newRole as UserRole;
+
+            const response = await this.service.updateUserRole(data.userId,role);
+
+            if(!response.success){
+                return {msg:response.message,status:400}
+            }
+
+            return {msg:"User role updated successfully",data:response.user,status:200};
+            
+        } catch (e:any) {
+            console.log(e);
+            return {
+                msg: 'Internal server error',
+                status: 500,
+            };
+        }
+    }
 }

@@ -104,5 +104,13 @@ export class UserRepository implements IUserRepository{
         }
     }
 
+    async updateUserRole(userId:string,newRole:string):Promise<IUser | null>{
+        try {
+            const user = await UserModel.findByIdAndUpdate(userId,{role:newRole},{new:true});
+            return user;
+        } catch (e:any) {
+            throw new Error('db error')
+        }
+    }
     
 }

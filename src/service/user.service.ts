@@ -231,4 +231,16 @@ export class UserService implements IUserService{
             return { success: false, message: "Failed to reset password" };
         }
     }
+    async updateUserRole(userId: string, newRole: string) {
+        try {
+            const user = await this.repository.updateUserRole(userId,newRole);
+            if(!user){
+                return {success:false,message:"User not found"};
+            }
+            return {success:true,message:"User role updated successfully",user};
+        } catch (err) {
+            console.error('Error updating user role:', err);
+            return { success: false, message: "Failed to update user role" };
+        }
+    }
 }

@@ -26,4 +26,5 @@ export interface IUserService{
         resetCode:string
     }):any;
     resetPassword(userId:string,newPassword:string):any
+    updateUserRole(userId: string, newRole: string):any
 }

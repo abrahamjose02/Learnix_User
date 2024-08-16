@@ -70,6 +70,10 @@ export default class MessageHandler{
                     response = await userController.resetPassword.bind(userController)(data);
                     break;
 
+                case "update-user-role":
+                    response = await userController.updateUserRole.bind(userController)(data);
+                    break;
+
                 default:
                     response = 'Request-key not found';
                     break;
