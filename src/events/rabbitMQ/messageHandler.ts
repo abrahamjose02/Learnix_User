@@ -47,11 +47,11 @@ export default class MessageHandler{
                     break;
 
                 case "get-all-users":
-                    response = await userController.getUsers.bind(userController)(data);
+                    response = await userController.getUsers.bind(userController)();
                     break;
                 
                 case "get-all-instructors":
-                    response = await userController.getInstructor.bind(userController)(data);
+                    response = await userController.getInstructor.bind(userController)();
                     break;
 
                 case "update-avatar":
@@ -72,6 +72,22 @@ export default class MessageHandler{
 
                 case "update-user-role":
                     response = await userController.updateUserRole.bind(userController)(data);
+                    break;
+
+                case "update-course-list":
+                    response = await userController.updateCourseList.bind(userController)(data)
+                    break;
+                    
+                case "verify-instructor":
+                    response = await userController.verifyInstructor.bind(userController)(data.id)
+                    break;
+
+                case "block-user":
+                    response = await userController.blockUser.bind(userController)(data.id)
+                    break;
+                
+                case "unBlock-user":
+                    response = await userController.unBlockUser.bind(userController)(data.id);
                     break;
 
                 default:

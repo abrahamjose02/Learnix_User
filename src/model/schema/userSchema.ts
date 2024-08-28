@@ -18,6 +18,7 @@ export interface IUser extends Document{
     };
     role:UserRole;
     isVerified:boolean;
+    isBlocked:boolean;
     courses:Array<{courseId:string}>;
     comparePassword:(password:string) => Promise<boolean>
     SignAccessToken:()=>string;
@@ -47,7 +48,6 @@ const userSchema : Schema<IUser> = new mongoose.Schema(
 
         password:{
             type:String,
-            required:true
         },
         avatar:{
             type:String,
@@ -60,6 +60,10 @@ const userSchema : Schema<IUser> = new mongoose.Schema(
         isVerified:{
             type:Boolean,
             default:false,
+        },
+        isBlocked:{
+            type:Boolean,
+            default:false
         },
         courses:[
             {

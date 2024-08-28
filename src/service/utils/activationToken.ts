@@ -5,7 +5,8 @@ import 'dotenv/config'
 
  export interface IActivationToken{
     token:string,
-    activationCode:string
+    activationCode:string,
+    success:boolean
 }
 
 export const createActivationToken = (user:User) : IActivationToken =>{
@@ -17,5 +18,5 @@ export const createActivationToken = (user:User) : IActivationToken =>{
             expiresIn:'5m',
         }
     );
-    return {token,activationCode};
+    return {token,activationCode,success:true};
 }

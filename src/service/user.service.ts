@@ -26,7 +26,7 @@ export class UserService implements IUserService{
           const isEmailExist = await this.repository.findOne(userData.email);
           if (isEmailExist) {
             if (!userData.avatar) {
-              throw new Error("Email Already Exists");
+              return { success: false, message: "Email Already Exist!" };
             } else {
               const accessToken = isEmailExist.SignAccessToken();
               const refreshToken = isEmailExist.SignRefreshToken();
@@ -40,25 +40,28 @@ export class UserService implements IUserService{
             const user = await this.repository.register(userData);
             const accessToken = user?.SignAccessToken();
             const refreshToken = user?.SignRefreshToken();
-            return { accessToken, refreshToken, user };
+            return { success: true, accessToken, refreshToken, user };
           }
         } catch (err) {
           return null;
-        }
-      }
+    }
+  }
 
       async userLogin(email: string, password: string) {
         try {
             const user = await this.repository.findOne(email);
-            console.log('Retrieved user:', user); // Log the retrieved user
+            console.log('Retrieved user:', user); 
     
             if (!user) {
                 return { success: false, message: 'Invalid email' };
             }
+
+            if(user.isBlocked){
+                return {success:false,message:"User has been blocked by Admin"}
+            }
     
             const isPasswordMatch = await user.comparePassword(password);
-            console.log('Is password match:', isPasswordMatch); // Log the password comparison result
-    
+            console.log('Is password match:', isPasswordMatch);
             if (!isPasswordMatch) {
                 return { success: false, message: 'Incorrect password' };
             }
@@ -81,15 +84,16 @@ export class UserService implements IUserService{
                 activationCode:string;
             };
             if(newUser.activationCode !== activationCode){
-                throw new Error('Invalid Code')
+                return { success: false, message: 'Invalid activation code' };
             }
             const existingUser = await this.repository.findOne(newUser.user.email)
             if(existingUser){
-                return null
+                return { success: false, message: 'Email already Exist' };
             }
-            return this.repository.register(newUser.user);
+            await this.repository.register(newUser.user);
+            return { success: true, message: 'User activated successfully' };
         } catch (err) {
-            return null
+            return null;
         }
     }
 
@@ -169,7 +173,7 @@ export class UserService implements IUserService{
         try {
             const user = await this.repository.findOne(email)
             if(!user){
-                throw new Error("user not found")
+                return {success:false,message:"User not found"}
             }
 
             const resetTokenData = createResetToken(user);
@@ -179,6 +183,7 @@ export class UserService implements IUserService{
             return {
                 success:true,
                 name:user.name,
+                userId:user.id,
                 message:"Reset code generated",
                 resetCode:resetTokenData.resetCode,
                 resetToken:resetTokenData.token
@@ -197,16 +202,16 @@ export class UserService implements IUserService{
             };
     
             if (decode.resetCode !== resetCode) {
-                throw new Error("Invalid reset code");
+                return { success: false, message: "Invalid reset code" };
             }
     
             const user = await this.repository.findOne(decode.user.email);
             if (!user) {
-                throw new Error("User not found");
+                return { success: false, message: "User not found" };
             }
     
             if (user.resetToken !== token || new Date() > user.resetTokenExpires) {
-                throw new Error("Invalid or expired reset token");
+                return { success: false, message: "Invalid or expired reset token" };
             }
     
             return { success: true, userId: user._id, message: "Reset token and code verified successfully" };
@@ -241,6 +246,53 @@ export class UserService implements IUserService{
         } catch (err) {
             console.error('Error updating user role:', err);
             return { success: false, message: "Failed to update user role" };
+        }
+    }
+    async updateCourseList(userId: string, courseId: string) {
+        await this.repository.updateCourseList(userId, courseId);
+        return {success:true,message:"Updated users-course list"};
+      }
+      
+    async verifyInstructor(userId: string) {
+        try {
+            const user = await this.repository.findbyId(userId);
+            if(!user){
+                return {success:false,message:"Instructor not found"};
+            }
+            if(user.isVerified){
+                return {success:true,message:"Instructor is already verified"}
+            }
+            await this.repository.updateVerificationStatus(userId)
+        } catch (e:any) {
+            console.log(e);
+            return { success: false, message: "Failed to verify instructor" };
+        }
+    }
+
+    async blockUser(userId: string) {
+        try {
+            const user = await this.repository.blockUser(userId)
+        if(!user){
+            return {success:false,message:"Admin failed to Block user"}
+        }
+        return {success:true,message:"User is blocked by Admin"};
+        } catch (e:any) {
+            console.log(e);
+            return { success: false, message: "Failed to block user" };
+        }
+        
+    }
+
+    async unBlockUser(userId: string) {
+        try {
+            const user = await this.repository.UnBlockUser(userId);
+            if(!user){
+                return {success:false,message:"Admin failed to Unblock user"}
+            }
+            return {success:true,message:"User is Unblocked by Admin" , forceLogout: true};
+        } catch (e:any) {
+            console.log(e);
+            return {success:false,message:"Failed to unblock user "}
         }
     }
 }

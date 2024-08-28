@@ -19,10 +19,11 @@ export class UserController{
                 avatar: "", 
                 role: UserRole.User, 
                 isVerified: false,
+                isBlocked:false
               };
               const response = await this.service.userRegister(userData)
-            if(!response){
-                throw new Error('Email Exist')
+            if(!response.success){
+               return response
             }
             else{
                 const activationData = {
@@ -34,7 +35,8 @@ export class UserController{
                 return{
                     msg:'Activation code send to the Email',
                     data:response,
-                    status:201
+                    status:201,
+                    success:true
                 }
             }
         } catch (e:any) {
@@ -45,15 +47,7 @@ export class UserController{
         try {
            
             const response = await this.service.activateUser(data)
-            if(!response){
-                return{
-                    msg:'Email Already Exist',
-                    status:409
-                };
-            }
-            else{
-                return{msg:'Successfully registered',status:201}
-            }
+            return response
         } catch (e:any) {
             console.log(e)
         }
@@ -62,22 +56,7 @@ export class UserController{
         try {
             const response = await this.service.userLogin(email, password);
     
-            if (!response.success) {
-                return {
-                    msg: response.message,
-                    status: 400, 
-                };
-            }
-    
-            return {
-                msg: 'Login successful',
-                data: {
-                    accessToken: response.accessToken,
-                    refreshToken: response.refreshToken,
-                    user: response.user,
-                },
-                status: 200,
-            };
+           return response
         } catch (e: any) {
             console.log(e);
             return {
@@ -96,19 +75,20 @@ export class UserController{
             console.log(e)
         }
     }
-    socialAuth = async(data:{name:string,email:string,avatar:string})=>{
+    socialAuth = async(data: { name: string; email: string; avatar: string; })=>{
         try {
             const userData = {
-                name:data.name,
-                email:data.email,
-                avatar:data.avatar,
-                role:UserRole.User,
-                isVerified: false
+                name: data.name,
+                email: data.email,
+                avatar: data.avatar,
+                role: UserRole.User,
+                isVerified: false,
+                isBlocked:false
             }
+            console.log(userData)
             const response = await this.service.userRegister(userData)
-            if(response){
-                return response
-            }
+            console.log(response)
+            return response
         } catch (e:any) {
             console.log(e)
         }
@@ -136,7 +116,7 @@ export class UserController{
         }
     }
     
-    getUsers = async(data: any)=>{
+    getUsers = async()=>{
         try {
             const response = await this.service.getUsers()
             return response
@@ -145,7 +125,7 @@ export class UserController{
         }
     }
 
-    getInstructor = async(data: any)=>{
+    getInstructor = async()=>{
         try {
             const response = await this.service.getInstructors()
             return response
@@ -180,6 +160,9 @@ export class UserController{
     forgotPassword = async(data:{email:string})=>{
         try {
             const response = await this.service.forgotPassword(data.email);
+            if(!response.success){
+                return response 
+            }
             const resetData = {
                 name:response.name,
                 email:data.email,
@@ -192,7 +175,8 @@ export class UserController{
             return{
                 msg:"Reset code send to the Email",
                 data:response,
-                status:201
+                status:201,
+                success:true
             }
         } catch (e:any) {
             console.log(e)
@@ -202,16 +186,7 @@ export class UserController{
     verifyResetCode =async(data:{token:string,resetCode:string}) =>{
         try {
             const response = await this.service.verifyResetCode(data)
-            if (!response.success) {
-                return {
-                    msg: response.message,
-                    status: 400,
-                };
-            }
-            return {
-                msg: 'Reset code verified successfully.',
-                status: 200,
-            };
+            return response
         } catch (e:any) {
             console.log(e)
         }
@@ -259,6 +234,83 @@ export class UserController{
                 msg: 'Internal server error',
                 status: 500,
             };
+        }
+    }
+
+    updateCourseList = async(data:{userId:string;courseId:string}) =>{
+        try {
+            const{userId,courseId} = data;
+
+            const response = await this.service.updateCourseList(userId,courseId);
+            if (!response.success) {
+                return {
+                    msg: response.message,
+                    status: 400, 
+                };
+            }
+            return {
+                msg: 'Course List updated',
+                status: 200,
+                succes:true
+            };
+        } catch (e:any) {
+            console.log(e);
+            return {
+                msg: 'Internal server error',
+                status: 500,
+                succes:false
+            };
+        }
+    }
+    verifyInstructor = async(id:string) =>{
+        console.log("id",id);
+        try {
+            const response = await this.service.verifyInstructor(id);
+            if (!response.success) {
+                return response; 
+            }
+            return {
+                msg: 'Instructor verified successfully',
+                status: 200,
+                success: true
+            };
+        } catch (e:any) {
+            console.log(e);
+            return { msg: 'Internal server error', status: 500 };
+        }
+    }
+
+    blockUser = async(id:string) =>{
+        try {
+            const response = await this.service.blockUser(id);
+            if(!response.succes){
+                return response;
+            }
+            return {
+                msg:"User has been blocked",
+                success:true,
+                status:200
+            }
+        } catch (e:any) {
+            console.log(e);
+            return { msg: 'Internal server error', status: 500 };
+        }
+    }
+
+    unBlockUser = async(id:string)=>{
+        try {
+            const response = await this.service.unBlockUser(id);
+            if(!response.succes){
+                return response;
+            }
+            return {
+                msg:"User has been UnBlocked",
+                success:true,
+                status:200
+            }
+        } catch (e:any) {
+            console.log(e);
+            return { msg: 'Internal server error', status: 500 };
         }
     }
 }

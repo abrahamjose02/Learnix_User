@@ -27,4 +27,8 @@ export interface IUserService{
     }):any;
     resetPassword(userId:string,newPassword:string):any
     updateUserRole(userId: string, newRole: string):any
+    updateCourseList(userId: string, courseId: string): any;
+    verifyInstructor(userId: string): any; 
+    blockUser(userId:string):any;
+    unBlockUser(userId:string):any;
 }

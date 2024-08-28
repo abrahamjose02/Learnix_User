@@ -6,6 +6,7 @@ import 'dotenv/config'
  export interface IResetToken{
     token:string,
     resetCode:string,
+    success:boolean
 }
 
 export const createResetToken = (user:any) : IResetToken =>{
@@ -17,5 +18,5 @@ export const createResetToken = (user:any) : IResetToken =>{
             expiresIn:'5m',
         }
     );
-    return {token,resetCode};
+    return {token,resetCode,success:true};
 }

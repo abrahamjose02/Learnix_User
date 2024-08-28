@@ -11,6 +11,7 @@ export class User{
         public readonly avatar:string,
         public readonly role:UserRole,
         public readonly isVerified:boolean,
+        public readonly isBlocked:boolean,
         public readonly courses?:Array<{courseId:String}>,
         public password ?: string,
         public readonly _id?:string

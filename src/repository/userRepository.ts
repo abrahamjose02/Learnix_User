@@ -112,5 +112,57 @@ export class UserRepository implements IUserRepository{
             throw new Error('db error')
         }
     }
-    
+    async updateCourseList(
+        userId: string,
+        courseId: string
+      ): Promise<IUser | null> {
+        try {
+          const user = await UserModel.findById(userId);
+          user?.courses.push({ courseId });
+          await user?.save();
+          return null;
+        } catch (e: any) {
+          throw new Error("db error");
+        }
+      }
+      async updateVerificationStatus(userId: string): Promise<IUser | null> {
+        try {
+            const user = await UserModel.findByIdAndUpdate(
+                userId,
+                { isVerified: true },
+                { new: true }
+              );
+              return user;
+        } catch (error) {
+            console.error("Error updating verification status:", error);
+            return null;
+        }
+    }
+    async blockUser(userId: string): Promise<IUser | null> {
+        try {
+            const user = await UserModel.findByIdAndUpdate(
+                userId,
+                {isBlocked:true},
+                {new:true}
+            );
+            return user;
+        } catch (e:any) {
+            console.error("Error blocking user:", e);
+            return null;
+        }
+    }
+
+    async UnBlockUser(userId: string): Promise<IUser | null> {
+        try {
+            const user = await UserModel.findByIdAndUpdate(
+                userId,
+                {isBlocked:false},
+                {new:true}
+            )
+            return user
+        } catch (e:any) {
+            console.error("Error blocking user:", e);
+            return null;
+        }
+    }
 }

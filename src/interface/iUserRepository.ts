@@ -17,4 +17,8 @@ export interface IUserRepository{
     updateResetToken(userId:string,resetToken:string,resetCode:string):Promise<IUser | null>
     clearResetToken(userId:string):Promise<IUser | null>
     updateUserRole(userId:string,newRole:string):Promise<IUser | null>
+    updateCourseList(userId: string, courseId: string): Promise<IUser | null>;
+    updateVerificationStatus(userId: string): Promise<IUser | null>;
+    blockUser(userId:string):Promise<IUser | null>
+    UnBlockUser(userId:string):Promise<IUser | null>
 }
