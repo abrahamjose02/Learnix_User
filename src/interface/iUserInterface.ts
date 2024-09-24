@@ -31,4 +31,5 @@ export interface IUserService{
     verifyInstructor(userId: string): any; 
     blockUser(userId:string):any;
     unBlockUser(userId:string):any;
+    getUserAnalytics(instructorId:string):Promise<[{month:string,count:number}] | null>;
 }

@@ -112,10 +112,14 @@ export class UserService implements IUserService{
             const user = await this.repository.findbyId(userId)
             const isPasswordMatch = await user?.comparePassword(oldPassword)
             if(!isPasswordMatch){
-                throw new Error('Password not match')
+                return {success:false,message:"Password not match"}
             }
             const password = await bcrypt.hash(newPassword || "",10);
-            await this.repository.updatePassword(userId,password)
+            const result = await this.repository.updatePassword(userId,password)
+            if(result){
+                const response = {success:false,status:201,message:"User Password updated successfully"};
+                return response
+            }
         } catch (err) {
             return null
         }
@@ -125,7 +129,7 @@ export class UserService implements IUserService{
         try {
             const user = await this.repository.findbyIdAndUpdate(id,name)
             if(user){
-                const response = {status:201,msg:'User info and updated successfully'};
+                const response = {status:201,message:'User info and updated successfully'};
                 return response
             }
         } catch (err) {
@@ -145,29 +149,42 @@ export class UserService implements IUserService{
         return await this.repository.deleteUser(userId)
     }
 
-    async updateAvatar(data: Buffer, fieldName: string, mimeType: string, id: string) {
+    async updateAvatar(
+        data: Buffer,
+        fieldname: string,
+        mimetype: string,
+        id: string
+      ) {
+        const bufferData = Buffer.from(data);
+    
         const randomImageName = (bytes = 32) =>
-            crypto.randomBytes(bytes).toString("hex");
+          crypto.randomBytes(bytes).toString("hex");
         const bucketName = process.env.S3_BUCKET_NAME || "";
-        const buffer = await sharp(data)
-            .resize({height:600,width:600,fit:"cover"})
-            .toBuffer();
+        const buffer = await sharp(bufferData)
+          .resize({ height: 600, width: 600, fit: "cover" })
+          .toBuffer();
+    
+        const imageName = `learnix-profile/${randomImageName()}`;
 
-        const imageName = `learnix-profile/${randomImageName}`;
-        const params:S3Params = {
-            Bucket:bucketName,
-            Key:imageName,
-            Body:buffer,
-            ContentType:mimeType
+        const params: S3Params = {
+          Bucket: bucketName,
+          Key: imageName,
+          Body: buffer,
+          ContentType: mimetype,
         };
-
-       const command = new PutObjectCommand(params);
-
-       const rslt = await s3.send(command);
-       const url = `https://user-avatar-info.s3.ap-south-1.amazonaws.com/${imageName}`;
-       await this.repository.avatarUpdate(id,url)
-       return {success:true};
-    }
+    
+        const command = new PutObjectCommand(params);
+    
+        const rslt = await s3.send(command);
+        const url = `https://instructor-data-bucket.s3.ap-south-1.amazonaws.com/${imageName}`;
+        await this.repository.avatarUpdate(id, url);
+        return {
+          status: 201,
+          success: true,
+          message: "Avatar Updated Successfully",
+          avatar:url
+        };
+      }
 
     async forgotPassword(email: string) {
         try {
@@ -295,4 +312,32 @@ export class UserService implements IUserService{
             return {success:false,message:"Failed to unblock user "}
         }
     }
+    async getUserAnalytics(instructorId:string): Promise<[{ month: string; count: number; }] | null>{
+        const months: { month: string; value: string }[] = [];
+        for (let i = 0; i < 12; i++) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i);
+          months.push({
+            month: date.toLocaleString("default", { month: "long" }),
+            value: date.toISOString().slice(0, 7),
+          });
+        }
+    
+        const response = await this.repository.getUserAnalytics(instructorId);
+        const aggregatedData: Record<string, number> = {};
+        if (response) {
+          response.forEach(({ _id, count }: any) => {
+            aggregatedData[_id] = count;
+          });
+        } else {
+          return null;
+        }
+    
+        const output: any = months.map(({ month, value }) => ({
+          month,
+          count: aggregatedData[value] || 0,
+        }));
+    
+        return output;
+      }
 }

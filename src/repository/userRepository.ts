@@ -76,11 +76,11 @@ export class UserRepository implements IUserRepository{
     }
     async avatarUpdate(id: string, avatar: string): Promise<IUser | null> {
         try {
-            return await UserModel.findByIdAndUpdate(id,{avatar});
-        } catch (e:any) {
-            throw new Error("db error");
+          return await UserModel.findByIdAndUpdate(id, { avatar });
+        } catch (e: any) {
+          throw new Error("db error");
         }
-    }
+      }
     async updateResetToken(userId: string, resetToken: string, resetCode: string): Promise<IUser | null> {
         try {
             const expirationTime = new Date();
@@ -165,4 +165,35 @@ export class UserRepository implements IUserRepository{
             return null;
         }
     }
+
+    async getUserAnalytics(instructorId: string): Promise<Object[] | null> {
+        try {
+          const twelveMonthsAgo = new Date();
+          twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    
+          const matchStage: any = {
+            $match: {
+              createdAt: { $gte: twelveMonthsAgo },
+            },
+          };
+          if (instructorId !== "admin") {
+            matchStage.$match.instructorId = instructorId;
+          }
+    
+          const response = await UserModel.aggregate([
+            matchStage,
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                count: { $sum: 1 },
+              },
+            },
+          ]);
+    
+          return response || [];
+        } catch (e: any) {
+          throw new Error("db error");
+        }
+      }
+
 }

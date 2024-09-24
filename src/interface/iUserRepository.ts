@@ -21,4 +21,5 @@ export interface IUserRepository{
     updateVerificationStatus(userId: string): Promise<IUser | null>;
     blockUser(userId:string):Promise<IUser | null>
     UnBlockUser(userId:string):Promise<IUser | null>
+    getUserAnalytics(instructorId:string):Promise<Object[] | null>
 }
